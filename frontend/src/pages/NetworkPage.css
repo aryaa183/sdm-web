@@ -1,0 +1,177 @@
+.network-page {
+  display: grid;
+  grid-template-columns: 1.3fr 1fr;
+  gap: 20px;
+  align-items: start;
+}
+
+.network-page__map-panel,
+.network-page__side-panel {
+  background: var(--bg-panel);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-panel);
+  padding: 22px;
+  min-height: 520px;
+}
+
+.network-svg {
+  width: 100%;
+  height: auto;
+  max-height: 420px;
+  display: block;
+  margin: 0 auto;
+}
+
+.network-svg__edge {
+  stroke: var(--border-strong);
+  stroke-width: 1.5;
+  stroke-dasharray: 3 5;
+}
+
+.network-node {
+  cursor: pointer;
+}
+
+.network-node__halo {
+  fill: none;
+  stroke: transparent;
+  transition: stroke 0.2s ease;
+}
+
+.network-node--selected .network-node__halo,
+.network-node:hover .network-node__halo {
+  stroke: rgba(63, 193, 201, 0.25);
+  stroke-width: 6;
+}
+
+.network-node__track {
+  fill: var(--bg-panel-raised);
+  stroke: var(--border-subtle);
+  stroke-width: 2;
+}
+
+.network-node__fill {
+  fill: none;
+  stroke: var(--accent-teal);
+  stroke-width: 4;
+  stroke-linecap: round;
+  transform: rotate(-90deg);
+  transform-origin: center;
+  transition: stroke-dashoffset 0.5s ease;
+}
+
+.network-node--selected .network-node__fill {
+  stroke: var(--severity-medium);
+}
+
+.network-node__label {
+  fill: var(--text-secondary);
+  font-family: var(--font-body);
+  font-size: 11px;
+  text-anchor: middle;
+}
+
+.network-node__count {
+  fill: var(--text-primary);
+  font-family: var(--font-mono);
+  font-size: 18px;
+  font-weight: 600;
+  text-anchor: middle;
+}
+
+.network-node__count-label {
+  fill: var(--text-tertiary);
+  font-family: var(--font-mono);
+  font-size: 8px;
+  text-anchor: middle;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.network-page__empty {
+  color: var(--text-tertiary);
+  font-size: 0.85rem;
+  text-align: center;
+  padding: 60px 20px;
+}
+
+.network-page__empty--error {
+  color: var(--severity-high);
+}
+
+.network-page__legend {
+  display: flex;
+  gap: 20px;
+  justify-content: center;
+  margin-top: 14px;
+  font-size: 0.72rem;
+  color: var(--text-tertiary);
+}
+
+.network-page__legend .dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin-right: 5px;
+}
+
+.dot--teal { background: var(--accent-teal); }
+.dot--line {
+  background: none;
+  border-top: 1px dashed var(--border-strong);
+  width: 12px;
+  height: 0;
+  border-radius: 0;
+  vertical-align: middle;
+}
+
+.alert-result__section-title {
+  font-size: 0.78rem;
+  font-family: var(--font-mono);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--accent-teal);
+  margin-bottom: 8px;
+}
+
+.alert-result__section-title--muted {
+  color: var(--severity-medium);
+}
+
+.alert-result section + section {
+  margin-top: 20px;
+}
+
+.hospital-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.hospital-list li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: var(--bg-panel-raised);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  padding: 9px 12px;
+  font-size: 0.83rem;
+}
+
+.hospital-list__beds {
+  font-family: var(--font-mono);
+  color: var(--text-secondary);
+  font-size: 0.78rem;
+}
+
+@media (max-width: 900px) {
+  .network-page {
+    grid-template-columns: 1fr;
+  }
+}

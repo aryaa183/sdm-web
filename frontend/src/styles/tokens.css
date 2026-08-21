@@ -1,0 +1,117 @@
+/* ==========================================================================
+   Design tokens — "Field Ops" console theme.
+   A dark, teal-tinted operations-console palette (not the generic warm-cream
+   or neon-on-black defaults) built around triage severity as the core
+   signal system: every red/amber/green in this app maps to a real
+   Severity value, never used decoratively.
+   ========================================================================== */
+
+:root {
+  /* Surface */
+  --bg-base: #0a1210;
+  --bg-panel: #101a17;
+  --bg-panel-raised: #172420;
+  --bg-panel-hover: #1e2f29;
+  --border-subtle: #223530;
+  --border-strong: #345048;
+
+  /* Text */
+  --text-primary: #e9f2ee;
+  --text-secondary: #8fa69e;
+  --text-tertiary: #5d746c;
+
+  /* Signal colors — tied 1:1 to Severity */
+  --severity-low: #3fa772;
+  --severity-low-dim: #1c3327;
+  --severity-medium: #f2a93b;
+  --severity-medium-dim: #3a2c14;
+  --severity-high: #e14b4b;
+  --severity-high-dim: #3a1c1c;
+
+  /* Accent */
+  --accent-teal: #3fc1c9;
+  --accent-teal-dim: #12302f;
+  --accent-amber: #f2a93b;
+
+  /* Type */
+  --font-display: 'Space Grotesk', 'Segoe UI', sans-serif;
+  --font-mono: 'IBM Plex Mono', 'SFMono-Regular', Consolas, monospace;
+  --font-body: 'Inter', 'Segoe UI', sans-serif;
+
+  /* Layout */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --shadow-panel: 0 1px 0 rgba(255, 255, 255, 0.03) inset, 0 8px 24px rgba(0, 0, 0, 0.35);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--bg-base);
+  background-image:
+    radial-gradient(ellipse 900px 500px at 15% -10%, rgba(63, 193, 201, 0.07), transparent),
+    radial-gradient(ellipse 700px 500px at 100% 0%, rgba(242, 169, 59, 0.05), transparent);
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3, h4 {
+  font-family: var(--font-display);
+  margin: 0;
+  letter-spacing: -0.01em;
+}
+
+p {
+  margin: 0;
+}
+
+button {
+  font-family: inherit;
+  cursor: pointer;
+}
+
+input, select, textarea {
+  font-family: inherit;
+}
+
+::selection {
+  background: var(--accent-teal-dim);
+  color: var(--text-primary);
+}
+
+/* Reduced motion respected globally */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent-teal);
+  outline-offset: 2px;
+}
+
+/* Scrollbar (webkit) tuned to the theme so it doesn't look like a stock browser default */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: var(--bg-panel);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border-strong);
+  border-radius: 999px;
+}
