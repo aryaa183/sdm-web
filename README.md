@@ -1,4 +1,4 @@
-# Field Ops — Smart Disaster Management System
+# Medigrid — Smart Disaster Management System
 
 A full-stack rebuild of a console-based disaster response simulator: region-based
 hospital alerts, severity-triaged patient admission with cross-region bed
