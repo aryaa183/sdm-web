@@ -1,0 +1,37 @@
+services:
+  mysql:
+    image: mysql:8
+    environment:
+      MYSQL_DATABASE: sdm
+      MYSQL_USER: sdm
+      MYSQL_PASSWORD: sdm_local_only
+      MYSQL_ROOT_PASSWORD: sdm_local_only
+    ports: ["3306:3306"]
+    volumes: [sdm_mysql_data:/var/lib/mysql]
+    healthcheck:
+      test: ["CMD-SHELL","mysqladmin ping -h localhost -u root -p$$MYSQL_ROOT_PASSWORD"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+  backend:
+    build: ./backend
+    depends_on:
+      mysql: {condition: service_healthy}
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/sdm
+      SPRING_DATASOURCE_USERNAME: sdm
+      SPRING_DATASOURCE_PASSWORD: sdm_local_only
+      ADMIN_USERNAME: admin
+      ADMIN_PASSWORD: changeme-dev-only
+      ALLOWED_ORIGINS: http://localhost:5173
+      PORT: 8080
+    ports: ["8080:8080"]
+  frontend:
+    build:
+      context: ./frontend
+      args: {VITE_API_BASE_URL: http://localhost:8080}
+    ports: ["5173:80"]
+    depends_on: [backend]
+volumes:
+  sdm_mysql_data:

@@ -1,0 +1,3 @@
+package com.aryaa.sdm.controller;
+import com.aryaa.sdm.service.EventBroadcastService; import org.springframework.web.bind.annotation.*; import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
+@RestController @RequestMapping("/api/events") public class EventsController { private final EventBroadcastService service; public EventsController(EventBroadcastService s){service=s;} @GetMapping public SseEmitter subscribe(){return service.subscribe();}}
