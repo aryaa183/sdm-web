@@ -1,95 +1,12 @@
 package com.aryaa.sdm.service;
-
-import com.aryaa.sdm.dto.AdmissionResult;
-import com.aryaa.sdm.dto.PatientDto;
-import com.aryaa.sdm.model.Hospital;
-import com.aryaa.sdm.model.Patient;
-import com.aryaa.sdm.model.PatientStatus;
-import com.aryaa.sdm.model.Region;
-import com.aryaa.sdm.repository.PatientRepository;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Optional;
-import java.util.PriorityQueue;
-
-/**
- * Admits every WAITING patient to a bed, highest severity first — a direct
- * port of {@code admitPatients} from the original console app, which used a
- * {@code PriorityQueue<Patient>} ordered by severity descending.
- *
- * <p>For each patient, this first tries a free bed in the disaster region;
- * if none is free there, it walks the region's connected regions in order
- * and takes the first free bed found. Patients who can't be placed anywhere
- * end up {@link PatientStatus#UNASSIGNED}.</p>
- */
-@Service
-@Transactional
+import com.aryaa.sdm.dto.*; import com.aryaa.sdm.exception.*; import com.aryaa.sdm.model.*; import com.aryaa.sdm.repository.*; import com.aryaa.sdm.util.GeoUtils; import org.springframework.stereotype.Service; import org.springframework.transaction.annotation.Transactional; import java.util.*;
+@Service @Transactional
 public class AdmissionService {
-
-    private final PatientRepository patientRepository;
-    private final RegionService regionService;
-
-    public AdmissionService(PatientRepository patientRepository, RegionService regionService) {
-        this.patientRepository = patientRepository;
-        this.regionService = regionService;
-    }
-
-    public AdmissionResult admitWaitingPatients(String disasterRegionName) {
-        Region disasterRegion = regionService.getRegionOrThrow(disasterRegionName);
-
-        PriorityQueue<Patient> triageQueue = new PriorityQueue<>(
-                Comparator.comparing(Patient::getSeverity).reversed()
-        );
-        triageQueue.addAll(patientRepository.findByStatus(PatientStatus.WAITING));
-
-        List<PatientDto> admitted = new ArrayList<>();
-        List<PatientDto> unassigned = new ArrayList<>();
-
-        while (!triageQueue.isEmpty()) {
-            Patient patient = triageQueue.poll();
-            Optional<AssignedBed> assignment = findBed(disasterRegion);
-
-            if (assignment.isPresent()) {
-                AssignedBed bed = assignment.get();
-                bed.hospital().occupyBed();
-                patient.admitTo(bed.hospital(), bed.regionName());
-                admitted.add(PatientDto.from(patient));
-            } else {
-                patient.setStatus(PatientStatus.UNASSIGNED);
-                unassigned.add(PatientDto.from(patient));
-            }
-        }
-
-        return new AdmissionResult(disasterRegion.getName(), admitted, unassigned);
-    }
-
-    /** First free bed in the disaster region, else the first free bed found while scanning connected regions in order. */
-    private Optional<AssignedBed> findBed(Region disasterRegion) {
-        Optional<Hospital> local = firstFreeBed(disasterRegion.getName());
-        if (local.isPresent()) {
-            return local.map(h -> new AssignedBed(h, disasterRegion.getName()));
-        }
-
-        for (String connectedRegionName : disasterRegion.getConnectedRegions()) {
-            Optional<Hospital> overflow = firstFreeBed(connectedRegionName);
-            if (overflow.isPresent()) {
-                return overflow.map(h -> new AssignedBed(h, connectedRegionName));
-            }
-        }
-
-        return Optional.empty();
-    }
-
-    private Optional<Hospital> firstFreeBed(String regionName) {
-        return regionService.getHospitals(regionName).stream()
-                .filter(Hospital::hasFreeBed)
-                .findFirst();
-    }
-
-    private record AssignedBed(Hospital hospital, String regionName) {
-    }
+ private final PatientRepository patients; private final RegionService regions; private final HospitalRepository hospitals; private final EventBroadcastService events;
+ public AdmissionService(PatientRepository p,RegionService r,HospitalRepository h,EventBroadcastService e){patients=p;regions=r;hospitals=h;events=e;}
+ public AdmissionResult admitWaitingPatients(String name){Region disaster=regions.getRegionOrThrow(name);PriorityQueue<Patient> q=new PriorityQueue<>(Comparator.comparing(Patient::getSeverity).reversed());q.addAll(patients.findByStatus(PatientStatus.WAITING));List<PatientDto> admitted=new ArrayList<>(),unassigned=new ArrayList<>();while(!q.isEmpty()){Patient p=q.poll();Optional<AssignedBed> bed=findBed(disaster);if(bed.isPresent()){var b=bed.get();p.admitTo(b.hospital(),b.region());admitted.add(PatientDto.from(p,b.distance()));}else{p.setStatus(PatientStatus.UNASSIGNED);unassigned.add(PatientDto.from(p));}}AdmissionResult out=new AdmissionResult(disaster.getName(),admitted,unassigned);events.broadcast("admission",out);return out;}
+ public PatientDto dischargePatient(Long id){Patient p=patients.findById(id).orElseThrow(()->new ResourceNotFoundException("Unknown patient id: "+id));if(p.getStatus()!=PatientStatus.ADMITTED)throw new InvalidOperationException("Patient "+id+" is not currently admitted");if(p.getAssignedHospital()!=null)hospitals.tryReleaseBed(p.getAssignedHospital().getId());p.discharge();PatientDto out=PatientDto.from(p);events.broadcast("discharge",out);return out;}
+ private Optional<AssignedBed> findBed(Region disaster){Optional<AssignedBed> local=claim(disaster.getName(),disaster.getName(),0);if(local.isPresent())return local;return regions.getAllRegionEntities().stream().filter(r->!r.getName().equalsIgnoreCase(disaster.getName())&&!r.isDisasterActive()).sorted(Comparator.comparingDouble(r->GeoUtils.haversineKm(disaster.getLatitude(),disaster.getLongitude(),r.getLatitude(),r.getLongitude()))).map(r->claim(r.getName(),r.getName(),GeoUtils.haversineKm(disaster.getLatitude(),disaster.getLongitude(),r.getLatitude(),r.getLongitude()))).filter(Optional::isPresent).map(Optional::get).findFirst();}
+ private Optional<AssignedBed> claim(String region,String label,double distance){for(Hospital h:regions.getHospitals(region)){if(hospitals.tryOccupyBed(h.getId())==1)return Optional.of(new AssignedBed(h,label,distance));}return Optional.empty();}
+ private record AssignedBed(Hospital hospital,String region,double distance){}
 }
